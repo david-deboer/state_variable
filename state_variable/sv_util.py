@@ -1,5 +1,5 @@
 from copy import copy, deepcopy
-from state_variable_error import StateVariableError
+from .state_variable_error import StateVariableError
 
 INVALID = '_x_iNvAlId_x_'
 

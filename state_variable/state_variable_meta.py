@@ -13,13 +13,13 @@ class _Metastate:
         'enforce_type': {'type': (bool), 'choices': [True, False], 'default': True},
         'notify_set': {'type': (str), 'choices': ['ignore', 'alert', 'error'], 'default': 'alert'},
         'notify_type': {'type': (str), 'choices': ['ignore', 'alert', 'error'], 'default': 'alert'},
-        'package': {'type': (str), 'choices': None, 'default': 'none'}
+        'package': {'type': (str), 'choices': None, 'default': 'default'}
         }
     state_key_defaults = {'state_name': None, 'state_value': None, 'state_type': 'auto', 'state_description': None}
 
     def __init__(self, **kwargs):
         """
-        Initialize state variable class with any of the metastate_parameters.
+        Initialize state variable class with any of the metastate parameters.
 
         Note that actual 'state' changes done here are only done within the metastate dictionary, not the state variable attribute.
 
@@ -29,9 +29,9 @@ class _Metastate:
             package is either a dict with appropriate meta values, or a str with the filename [and :key] of appropriate meta values
             state is either a dict with appropriate state values, or a str with the filename [and :key] of appropriate state values
                 "appropriate state values" (either directly or in the supplied file) are e.g.:
-                    {'frequency': {'state_value': 1420.0, 'state_type': 'float', 'state_description': 'Frequency in MHz'},
+                    state = {'frequency': {'state_value': 1420.0, 'state_type': 'float', 'state_description': 'Frequency in MHz'},
                      'bandwidth': {'state_value': 1.0, 'state_type': 'float', 'state_description': 'Bandwidth in MHz'}}
-                    {'frequency': 1420.0, 'bandwidth': 1.0}
+                    state = {'frequency': 1420.0, 'bandwidth': 1.0}
 
         """
         self._make_defined_packages_()
@@ -82,7 +82,7 @@ class _Metastate:
 
         """
         this_package = {}
-        if package is None or package in ['none', 'None']:
+        if package in ['none', 'None', None]:
             return {}
         if isinstance(package, dict):
             if 'package' not in package or package['package'] is None:
@@ -97,10 +97,16 @@ class _Metastate:
         return deepcopy(this_package)
 
     def _process_meta_key_val_(self, this_key, this_val):
-        """Get a valid metastate value for a single metastate 'this_key'."""
+        """
+        Get a valid metastate value for a single metastate 'this_key'.
+
+        This ensures that the value is of the appropriate type and choices.
+        ****MAKE SURE THE ABOVE IS TRUE
+        
+        """
         key_lower = this_key.lower()
         if key_lower not in self.parameters:
-            return sv_util.INVALID
+            return f"{sv_util.INVALID}|{this_key}"
         if key_lower.startswith('enforce') or key_lower == 'verbose':
             return sv_util._bool_from_input_(this_val)
         if key_lower.startswith('notify'):
@@ -111,10 +117,19 @@ class _Metastate:
             return copy(self.parameters[key_lower]['choices'][-1])
         if key_lower == 'state':
             return self._poke_statevar_dict_(this_val)
-        return this_val
+        if self.parameters[key_lower]['choices'] is None and isinstance(type(this_val), self.parameters[key_lower]['type']):
+            return this_val
+        elif this_val in self.parameters[key_lower]['choices']:
+            return this_val
+        return f"{sv_util.INVALID}|{this_key}={this_val}"
 
     def _poke_statevar_dict_(self, state2update):
-        """Make complete state attribute dictionary given updates in state2update."""
+        """
+        Make complete state attribute dictionary given updates in state2update.
+        
+        Called from _proecss_meta_key_val_
+
+        """
         state2update = sv_util._dict_from_input_(state2update)
         if state2update is None:
             return {}
@@ -145,7 +160,7 @@ class _Metastate:
         """
         Check and set the internal state - can change everything regardless of enforcement.
 
-        This is the workhorse method that sets the metastate parameters.
+        This is the workhorse method that sets the metastate parameters, where the work is done in _process_meta_key_val_
 
         Parameters
         ----------
@@ -170,32 +185,22 @@ class _Metastate:
             setargs = {}
         setargs.update(kwargs)
 
-        if 'verbose' in setargs:
-            self.verbose = sv_util._bool_from_input_(setargs['verbose'])
+        if 'verbose' in setargs:  # Do 1st since used below.
+            self.verbose = self._process_meta_key_val_('verbose', setargs['verbose'])
             del setargs['verbose']
 
         for this_key, this_val in setargs.items():
             value = self._process_meta_key_val_(this_key, this_val)
-            if value == sv_util.INVALID:
+            if value.startswith(sv_util.INVALID):
                 if self.verbose:
-                    print(self._alert_(f"{this_key} not allowed metastate option"))
-                continue
-            if isinstance(value, self.parameters[this_key]['type']):
-                if self.parameters[this_key]['choices'] is None:
-                    if isinstance(value, dict):
-                        getattr(self, this_key).update(value)
-                    else:
-                        setattr(self, this_key, copy(value))
-                else:
-                    if value in self.parameters[this_key]['choices']:
-                        setattr(self, this_key, copy(value))
-                    else:
-                        print(self._alert_(f"{value} not in {self.parameters[this_key]['choices']}"))
+                    print(self._alert_(f"{value.split('|')[1]} not allowed metastate option"))
+            elif isinstance(value, dict):
+                getattr(self, this_key).update(deepcopy(value))
             else:
-                if self.verbose:
-                    print(self._alert_(f"Invalid type for {this_key} (got {type(value)} expected {self.parameters[this_key]['type']})"))
+                setattr(self, this_key, deepcopy(value))
 
     def reset_state_key(self):
+        """Since dicts get updated, not overwritten, this allows a reset."""
         if self.verbose:
             print("This will erase all of the current state keys.")
         self.state = {}

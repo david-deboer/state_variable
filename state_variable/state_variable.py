@@ -1,8 +1,8 @@
 """General simple state variable module."""
 from copy import deepcopy
-from .state_variable_error import StateVariableError
 from . import sv_util
 from . import state_variable_meta
+from .state_variable_error import StateVariableError
 
 class StateVariable:
     """
