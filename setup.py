@@ -13,9 +13,8 @@ setup_args = {
     'author': "David DeBoer",
     'author_email': "david.r.deboer@gmail.com",
     'version': '0.1',
-    #'scripts': glob.glob('scripts/*'),
     'packages': ['state_variable']
-    #'package_data': {"my_utils": ["data/*"]}
+    #'install_requires': ['pyyaml', 'json']
 }
 
 if __name__ == '__main__':

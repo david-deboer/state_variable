@@ -62,7 +62,7 @@ class _Metastate:
 
     def get_package(self, package):
         """
-        Provide package of metastates given an input "package".
+        Provide package of metastates given an input "package" name or dict.
 
         If a dict is supplied, it adds it to self.defined_pkg, as supplied name or 'user'
 
@@ -70,10 +70,10 @@ class _Metastate:
         ---------
         package : None, str or dict
             If None, returns empty dict.
-            If dict, returns same dict but with 'pattern' name if not present.
+            If dict, returns same dict but with 'package' name if not present.
             If str, (a) endswith .json/.yaml/.yml will read files
                     (b) can be one of the "defined" packages from _make_defined_packages_
-                    Other strings are just ignored.
+                    Other strings are just ignored and an empty dict is returned.
 
         Returns
         -------
@@ -101,8 +101,17 @@ class _Metastate:
         Get a valid metastate value for a single metastate 'this_key'.
 
         This ensures that the value is of the appropriate type and choices.
-        ****MAKE SURE THE ABOVE IS TRUE
         
+        Parameters
+        ----------
+        this_key : str
+           Must be one of the metastate parameters.
+        this_val : metastate parameter types
+           Must be a value of one of the metastate parameters types or derived from it.
+        
+        Returns
+        -------
+        The value derived for that metastate parameter -- it IS one of the metastate parameter types or INVALID|.
         """
         key_lower = this_key.lower()
         if key_lower not in self.parameters:
@@ -128,6 +137,15 @@ class _Metastate:
         Make complete state attribute dictionary given updates in state2update.
         
         Called from _proecss_meta_key_val_
+
+        Parameter
+        ---------
+        state2update : something handleable by sv_utils._dict_from_input_
+
+        Returns
+        -------
+        dict
+            Contains values for all of the metastate state:  state_name, state_value, etc
 
         """
         state2update = sv_util._dict_from_input_(state2update)

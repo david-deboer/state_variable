@@ -37,8 +37,7 @@ def _bool_from_input_(inputv):
             return False
         if inputv.lower().startswith('t') in ['t', 'y', '1']:
             return True
-        print(f"Ambiguous boo eval ({inputv}) - setting True")
-        return True
+        raise StateVariableError(f"Ambiguous bool eval ({inputv}).")
     return bool(inputv)
 
 def _type_from_input_(inputv, etval=None):

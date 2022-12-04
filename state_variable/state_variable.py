@@ -82,23 +82,36 @@ class StateVariable:
         This is the internal method -- if a parent, may wish to recast state to do specific instructions/checking.
 
         Some examples:
-        <>.state(meta_init=True, a_new_variable=a_new_value)
+        <>.state(a_new_variable=a_new_value)
 
         Parameters
         ----------
         **kwargs: Change a state variable or one-time change a metastate (i.e. to initialize etc).
                   All names will begin with either meta_ or state_, except for an actual state.
-                  A special flag called 'meta_init' is included to allow for initialization.
 
         """
         self.sv_set_state(**kwargs)
 
-    def reset_state(self):
-        yn = input("This will delete all state variables.  Do you with to continue (y/n)?")
-        if yn == 'y':
+    def reset_state(self, override_yn=None):
+        """
+        Delete state attributes and empty metastate_state.
+
+        Parameter
+        ---------
+        override_yn :
+            If anything other than None, it will skip the yn safeguard query.
+            
+        """
+        if override_yn is None:
+            yn = input("This will delete all state variables.  Do you wish to continue (y/n)?")
+        else:
+            yn = override_yn
+        if sv_util._bool_from_input_(yn):
             for this_state in self.metastate.state:
                 delattr(self, this_state)
             self.metastate.reset_state_key()
+        elif self.metastate.verbose:
+            print("Not deleting state.")
 
     def _process_sv_set_state_input_kwargs_(self, **kwargs):
         """Takes input kwargs and makes them appropriate for metastate.mset"""
@@ -136,7 +149,7 @@ class StateVariable:
                      state_name='frequency', state_value=1420.0, state_type='float', state_description='Frequency in MHz'
                   or
                      frequency=1420, bandwidth=1.0
-                  You should only use 1 of the 3.
+                  You should only use 1 method of the 3
 
         """
         if not len(kwargs):
