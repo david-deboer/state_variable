@@ -13,7 +13,7 @@ class _Metastate:
         'enforce_type': {'type': (bool), 'choices': [True, False], 'default': True},
         'notify_set': {'type': (str), 'choices': ['ignore', 'alert', 'error'], 'default': 'alert'},
         'notify_type': {'type': (str), 'choices': ['ignore', 'alert', 'error'], 'default': 'alert'},
-        'package': {'type': (str), 'choices': None, 'default': 'default'}
+        'package': {'type': (str, dict), 'choices': None, 'default': 'default'}
         }
     state_key_defaults = {'state_name': None, 'state_value': None, 'state_type': 'auto', 'state_description': None}
 
@@ -89,11 +89,19 @@ class _Metastate:
                 package['package'] = 'user'
             self.defined_pkg[package['package']] = deepcopy(package)
             this_package = package
-        if package.endswith('.json') or package.endswith('.yaml') or package.endswith('.yml'):
+        elif package.endswith('.json') or package.endswith('.yaml') or package.endswith('.yml'):
             this_package = {'package': package}
             this_package.update(sv_util._dict_from_input_(package))
-        if package in self.defined_pkg:
+        elif package in self.defined_pkg:
             this_package = self.defined_pkg[package]
+        cull_package = list(this_package.keys())
+        for this_key in cull_package:
+            if this_key not in self.parameters:
+                if self.verbose:
+                    print(f"Warning: {this_key} is not a valid metastate parameter.")
+                del this_package[this_key]
+        if len(this_package) == 1 and list(this_package.keys())[0] == 'package':
+            return {}
         return deepcopy(this_package)
 
     def _process_meta_key_val_(self, this_key, this_val):
@@ -126,9 +134,9 @@ class _Metastate:
             return copy(self.parameters[key_lower]['choices'][-1])
         if key_lower == 'state':
             return self._poke_statevar_dict_(this_val)
-        if self.parameters[key_lower]['choices'] is None and isinstance(type(this_val), self.parameters[key_lower]['type']):
+        if self.parameters[key_lower]['choices'] is None and isinstance(this_val, self.parameters[key_lower]['type']):
             return this_val
-        elif this_val in self.parameters[key_lower]['choices']:
+        elif isinstance(self.parameters[key_lower]['choices'], list) and this_val in self.parameters[key_lower]['choices']:
             return this_val
         return f"{sv_util.INVALID}|{this_key}={this_val}"
 
@@ -166,11 +174,11 @@ class _Metastate:
             if isinstance(sv_val, dict):
                 if self.verbose and 'state_name' in sv_val and sv_val['state_name'] != sv_name:
                     print(f"{sv_name} != {sv_val['state_name']} -> using {sv_name}")
-                update_state.update(sv_val)
-                update_state['state_type'] = sv_util._type_from_input_(update_state['state_type'], update_state['state_value'])
+                update_state.update(sv_val)    
             else:
                 update_state.update({'state_value': sv_val})
             update_state['state_name'] = copy(sv_name)
+            update_state['state_type'] = sv_util._type_from_input_(update_state['state_type'], update_state['state_value'])
             return_state[sv_name] = deepcopy(update_state)
         return return_state
 
@@ -209,7 +217,7 @@ class _Metastate:
 
         for this_key, this_val in setargs.items():
             value = self._process_meta_key_val_(this_key, this_val)
-            if value.startswith(sv_util.INVALID):
+            if isinstance(value, str) and value.startswith(sv_util.INVALID):
                 if self.verbose:
                     print(self._alert_(f"{value.split('|')[1]} not allowed metastate option"))
             elif isinstance(value, dict):
