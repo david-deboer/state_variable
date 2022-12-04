@@ -12,7 +12,7 @@ setup_args = {
     'license': "BSD",
     'author': "David DeBoer",
     'author_email': "david.r.deboer@gmail.com",
-    'version': '0.1',
+    'version': '0.8',
     'packages': ['state_variable']
     #'install_requires': ['pyyaml', 'json']
 }

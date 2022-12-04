@@ -3,7 +3,7 @@ from copy import copy, deepcopy
 from . import sv_util
 
 
-class _Metastate:
+class Metastate:
     parameters = {
         'label': {'type': (str), 'choices': None, 'default': 'StateVarDef'},
         'note': {'type': (str), 'choices': None, 'default': 'StateVariable class'},
@@ -39,7 +39,7 @@ class _Metastate:
             setattr(self, k, copy(v['default']))
         self.mset(**kwargs)
 
-    def _alert_(self, msg):
+    def _svm_alert_(self, msg):
         return f"ALERT:MSV[{self.label}]: {msg}"
 
     def _make_defined_packages_(self):
@@ -215,15 +215,20 @@ class _Metastate:
             self.verbose = self._process_meta_key_val_('verbose', setargs['verbose'])
             del setargs['verbose']
 
+        actually_updated = False
         for this_key, this_val in setargs.items():
             value = self._process_meta_key_val_(this_key, this_val)
             if isinstance(value, str) and value.startswith(sv_util.INVALID):
                 if self.verbose:
-                    print(self._alert_(f"{value.split('|')[1]} not allowed metastate option"))
+                    print(self._svm_alert_(f"{value.split('|')[1]} not allowed metastate option"))
             elif isinstance(value, dict):
                 getattr(self, this_key).update(deepcopy(value))
             else:
+                if getattr(self, this_key) != value:
+                    actually_updated = True
                 setattr(self, this_key, deepcopy(value))
+        if 'package' not in setargs and actually_updated:
+            self.package = 'user'
 
     def reset_state_key(self):
         """Since dicts get updated, not overwritten, this allows a reset."""

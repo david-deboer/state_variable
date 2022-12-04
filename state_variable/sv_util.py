@@ -33,9 +33,9 @@ def _bool_from_input_(inputv):
     if isinstance(inputv, bool):
         return copy(inputv)
     if isinstance(inputv, str):
-        if inputv.lower().startswith('f') in ['f', 'n', '0']:
+        if inputv.lower()[0] in ['f', 'n', '0']:
             return False
-        if inputv.lower().startswith('t') in ['t', 'y', '1']:
+        if inputv.lower()[0] in ['t', 'y', '1']:
             return True
         raise StateVariableError(f"Ambiguous bool eval ({inputv}).")
     return bool(inputv)

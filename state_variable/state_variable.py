@@ -66,13 +66,14 @@ class StateVariable:
                     {'frequency': {'state_value': 1420.0, 'state_type': 'float', 'state_description': 'Frequency in MHz'},
                      'bandwidth': {'state_value': 1.0, 'state_type': 'float', 'state_description': 'Bandwidth in MHz'}}
                     {'frequency': 1420.0, 'bandwidth': 1.0}
+                    {'state_name': 'frequency', 'state_value': 1420.0, 'state_type': 'float', 'state_description': 'Frequency in MHz'}
 
         """
-        self.metastate = state_variable_meta._Metastate(**kwargs)
+        self.metastate = state_variable_meta.Metastate(**kwargs)
         for k in self.metastate.state:
             setattr(self, k, self.metastate.state[k]['state_value'])
 
-    def _alert_(self, msg):
+    def _sv_alert_(self, msg):
         return f"ALERT:SV[{self.metastate.label}]: {msg}"
 
     def state(self, **kwargs):
@@ -103,7 +104,7 @@ class StateVariable:
             
         """
         if override_yn is None:
-            yn = input("This will delete all state variables.  Do you wish to continue (y/n)?")
+            yn = input("This will delete all state variables.  Do you wish to continue (y/n)? ")
         else:
             yn = override_yn
         if sv_util._bool_from_input_(yn):
@@ -121,7 +122,7 @@ class StateVariable:
             del(kwargs['meta_init'])
         for k, v in kwargs.items():
             if k.startswith('meta_'):
-                mpar = k.split('_')[1]
+                mpar = k[5:]
                 kwproc[mpar] = deepcopy(v)
             elif k.startswith('state_'):
                 this_state_name = kwargs['state_name']   # has to have state_name if any state_
@@ -176,13 +177,13 @@ class StateVariable:
                 if k not in self.metastate.state:
                     eliminate_keys.append(k)
                     if self.metastate.notify_set == 'alert':
-                        print(self._alert_(f"!!!Not setting {k} since not a state variable."))
+                        print(self._sv_alert_(f"!!!Not setting {k} since not a state variable."))
                     elif self.metastate.notify_set == 'error':
-                        raise StateVariableError(self._alert_(f"{k} is not a state variable."))
+                        raise StateVariableError(self._sv_alert_(f"{k} is not a state variable."))
         else:
             for k in state2update:
                 if k not in self.metastate.state and self.metastate.notify_set in ['alert', 'error']:
-                    print(self._alert_(f"Setting {k} to {state2update[k]} even though it is new."))
+                    print(self._sv_alert_(f"Setting {k} to {state2update[k]} even though it is new."))
         for k in eliminate_keys:
             del state2update[k]
 
@@ -202,14 +203,15 @@ class StateVariable:
             if self.metastate.enforce_type:
                 eliminate_keys.append(k)
                 if self.metastate.notify_type == 'alert':
-                    print(self._alert_(f"!!!Not setting {k} since not {v['state_type']}"))
+                    print(self._sv_alert_(f"!!!Not setting {k} since not {v['state_type']}"))
                 elif self.metastate.notify_type == 'error':
-                    raise StateVariableError(self._alert_(f"Incorrect type for {k} - should be {v['state_type']}"))
+                    raise StateVariableError(self._sv_alert_(f"Incorrect type for {k} - should be {v['state_type']}"))
             else:
                 if self.metastate.notify_type in ['alert', 'error']:
-                    print(self._alert_(f"Setting {k} to {state2update[k]} even though not {v['state_type']}."))
+                    print(self._sv_alert_(f"Setting {k} to {state2update[k]} even though not {v['state_type']}."))
         for k in eliminate_keys:
             del state2update[k]
+
         self.metastate.mset(state = state2update)
         for k in state2update:
             setattr(self, k, self.metastate.state[k]['state_value'])
