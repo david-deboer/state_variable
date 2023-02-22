@@ -10,7 +10,10 @@ def get_end_of_month(date):
 
 class IntervalTracker:
     """
-    Group time-based data by Interval (year, month, day, hour, minute, second).
+    Group time-based data by Interval (year, month, day, hour, minute).
+
+    To use, you .add() to the class as you read in time-tracked data.  When done,
+    you .make() it to copy the data to arrays.
 
     If values are numeric, it will sum.  If not, will keep latest.
     """
@@ -22,6 +25,15 @@ class IntervalTracker:
                          'minute': ['minute', 'min']}
 
     def __init__(self, interval, variables='value'):
+        """
+        Parameters
+        ----------
+        interval : str
+            One of the self.intervals_allowed values.
+        variables : str or list of str
+            Variable name or list of variable names.  If .add'd by a list, the order
+            presented here is utilized.
+        """
         for itvname, itvlist in self.intervals_allowed.items():
             if interval.lower() in itvlist:
                 self.interval = itvname
@@ -54,16 +66,18 @@ class IntervalTracker:
 
     def add(self, date, val):
         """
-        Add to the interval tracker.  Probably overall comprehensive and flexible...
+        Add data to the interval tracker.
+
+        This populates the self.values and self.per_interval dictionaries.
 
         Parameters
         ----------
         date : datetime or list/tuple of datetimes (in same variable order/number) or dict of variable/datetime
                if just a datetime, it will associate all vals with that datetime
         val : value or list/tuple of values (in same variable order/number) or dict of variable/values
-              if just a value, it assumes only one variable was passed and date must agree
+              if just a value, it assumes only one variable was passed
         """
-        these_values = {}  # dict keyed on variable with value [date, variable_value]
+        these_values = {}  # dict keyed on 'variable' with value ['date', variable_value]
         dates2add = self._add_dict(date)
         vals2add = self._add_dict(val)
         for variable in vals2add:
@@ -95,6 +109,11 @@ class IntervalTracker:
                         self.values[variable][mark] = (vdate, vval)
 
     def make(self):
+        """
+        Convert self.values to class attribute lists:
+            self.<variable_name>
+            self.date.<variable_name>
+        """
         self.date = Namespace()
         for variable in self.variables:
             setattr(self, variable, [])
@@ -104,13 +123,17 @@ class IntervalTracker:
                 getattr(self, variable).append(self.values[variable][mark_date])
 
     def number_date(self):
+        """
+        Tries to make a sensible float from the time data as a class attribute list:
+            self.<interval>.<variable_name>
+        """
         setattr(self, self.interval, Namespace())
         if self.interval == 'year':
             for variable in self.variables:
                 setattr(self.year, variable, [dt.year for dt in getattr(self.date, variable)])
         elif self.interval == 'month':
             for variable in self.variables:
-                setattr(self.year, variable, [dt.year + dt.month / 12.0 for dt in getattr(self.date, variable)])
+                setattr(self.month, variable, [dt.year + dt.month / 12.0 for dt in getattr(self.date, variable)])
         else:
             mult = {'day': 1.0, 'hour': 24.0, 'minute': 24.0*60.0}
             for variable in self.variables:
