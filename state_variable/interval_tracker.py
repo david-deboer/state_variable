@@ -110,7 +110,7 @@ class IntervalTracker:
 
     def make(self):
         """
-        Convert self.values to class attribute lists:
+        Convert self.values to time sorted class attribute lists:
             self.<variable_name>
             self.date.<variable_name>
         """
