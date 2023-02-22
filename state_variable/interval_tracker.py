@@ -106,3 +106,11 @@ class IntervalTracker:
                 getattr(self.date, variable).append(mark_date)
                 getattr(self, variable).append(self.values[variable][mark_date])
 
+
+    def number_date(self):
+        if self.interval[0] == 'y' or self.interval[0] == 'a':
+            self.year = Namespace()
+            for variable in self.variables:
+                setattr(self.year, variable, [dt.year for dt in getattr(self.date, variable)])
+        else:
+            print("Only do yearly for now.")
