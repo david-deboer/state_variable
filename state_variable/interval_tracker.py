@@ -70,7 +70,7 @@ class IntervalTracker:
             these_values[variable] = [dates2add[variable], vals2add[variable]]
 
         for variable, [vdate, vval] in these_values.items():
-            if self.interval[0] == 'year':
+            if self.interval == 'year':
                 mark = datetime(year=vdate.year, month=12, day=31)
             elif self.interval == 'month':
                 mark = get_end_of_month(vdate)
