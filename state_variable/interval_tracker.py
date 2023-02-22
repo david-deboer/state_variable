@@ -74,7 +74,7 @@ class IntervalTracker:
                 for xvar, xval in zip(self.variables, val):
                     these_values[xvar] = [date, xval]
 
-        for variable, vdate, vval in these_values.items():
+        for variable, [vdate, vval] in these_values.items():
             if self.interval[0] == 'd':
                 mark = datetime(year=vdate.year, month=vdate.month, day=vdate.day)
             elif self.interval[0] == 'm':
