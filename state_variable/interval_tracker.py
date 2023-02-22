@@ -30,7 +30,7 @@ class IntervalTracker:
 
     def add(self, date, val):
         """
-        Add to the interval tracker.
+        Add to the interval tracker.  Probably overall comprehensive and flexible...
 
         Parameters
         ----------
@@ -112,5 +112,9 @@ class IntervalTracker:
             self.year = Namespace()
             for variable in self.variables:
                 setattr(self.year, variable, [dt.year for dt in getattr(self.date, variable)])
+        elif self.interval[0] == 'm':
+            self.month = Namespace()
+            for variable in self.variables:
+                setattr(self.year, variable, [dt.year + dt.month / 12.0 for dt in getattr(self.date, variable)])
         else:
             print("Only do yearly for now.")
