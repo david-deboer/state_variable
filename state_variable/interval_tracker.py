@@ -14,8 +14,18 @@ class IntervalTracker:
 
     If values are numeric, it will sum.  If not, will keep latest.
     """
+
+    intervals_allowed = {'year': ['year', 'yearly', 'yr', 'annual'],
+                         'month': ['month', 'monthly', 'mon', 'mn'],
+                         'day': ['day', 'daily', 'dy'],
+                         'hour': ['hour', 'hourly', 'hr'],
+                         'minute': ['minute', 'min']}
+
     def __init__(self, interval, variables='value'):
-        self.interval = interval.lower()
+        for itvname, itvlist in self.intervals_allowed.items():
+            if interval.lower() in itvlist:
+                self.interval = itvname
+                break
         self.values = {}
         self.per_interval = {}
         if isinstance(variables, str):
@@ -27,6 +37,20 @@ class IntervalTracker:
         for variable in self.variables:
             self.values[variable] = {}
             self.per_interval[variable] = {}
+
+    def _add_dict(self, x):
+        if isinstance(x, dict):
+            return x
+        this_dict = {}
+        if isinstance(x, (list, tuple)):
+            if len(x) != len(self.variables):
+                raise ValueError(f"lengths must agree: {len(x)} != {len(self.variables)}")
+            for a, b in zip(self.variables, x):
+                this_dict[a] = b
+            return this_dict
+        for a in self.variables:
+            this_dict[a] = x
+        return this_dict
 
     def add(self, date, val):
         """
@@ -40,49 +64,22 @@ class IntervalTracker:
               if just a value, it assumes only one variable was passed and date must agree
         """
         these_values = {}  # dict keyed on variable with value [date, variable_value]
-
-        if not isinstance(val, (list, tuple, dict)) and not isinstance(date, (list, tuple, dict)):
-            if len(self.variables) == 1:
-                these_values[self.variables[0]] = [date, val]
-            else:
-                raise ValueError("Date/val values must have only one class variable.")
-        elif isinstance(val, dict):
-            if isinstance(date, dict):
-                if len(val) == len(date):
-                    for kvar, kval in val.items():
-                        these_values[kvar] = [date[kvar], kval]
-                else:
-                    raise ValueError("Specified date and val dicts must match.")
-            elif isinstance(date, (list, tuple)):
-                raise ValueError("Must be bare datetime if val is dict and date is not.")
-            else:
-                for kvar, kval in val.items():
-                    these_values[kvar] = [date, kval]
-        elif isinstance(val, (list, tuple)):
-            if len(val) != len(self.variables):
-                raise ValueError(f"value and variable lengths must agree: {len(val)} != {len(self.variables)}")
-            if isinstance(date, (list, tuple)):
-                if len(date) != len(self.variables):
-                    raise ValueError(f"date and variable lengths must agree: {len(val)} != {len(self.variables)}")
-                else:
-                    for xvar, xval, xdt in zip(self.variables, val, date):
-                        these_values[xvar] = [xdt, xval]
-            elif isinstance(date, dict):
-                for xvar, xval in zip(self.variables, val):
-                    these_values[xvar] = [date[xvar], xval]
-            else:
-                for xvar, xval in zip(self.variables, val):
-                    these_values[xvar] = [date, xval]
+        dates2add = self._add_dict(date)
+        vals2add = self._add_dict(val)
+        for variable in vals2add:
+            these_values[variable] = [dates2add[variable], vals2add[variable]]
 
         for variable, [vdate, vval] in these_values.items():
-            if self.interval[0] == 'd':
-                mark = datetime(year=vdate.year, month=vdate.month, day=vdate.day)
-            elif self.interval[0] == 'm':
-                mark = get_end_of_month(vdate)
-            elif self.interval[0] == 'y' or self.interval[0] == 'a':
+            if self.interval[0] == 'year':
                 mark = datetime(year=vdate.year, month=12, day=31)
-            else:
-                raise ValueError(f"Don't do interval {self.interval} yet.")
+            elif self.interval == 'month':
+                mark = get_end_of_month(vdate)
+            elif self.interval == 'day':
+                mark = datetime(year=vdate.year, month=vdate.month, day=vdate.day)
+            elif self.interval == 'hour':
+                mark = datetime(year=vdate.year, month=vdate.month, day=vdate.day, hour=vdate.hour)
+            elif self.interval == 'minute':
+                mark = datetime(year=vdate.year, month=vdate.month, day=vdate.day, hour=vdate.hour, minute=vdate.minute)
             self.per_interval[variable].setdefault(mark, [])
             self.per_interval[variable][mark].append(vdate)
             try:
@@ -106,15 +103,15 @@ class IntervalTracker:
                 getattr(self.date, variable).append(mark_date)
                 getattr(self, variable).append(self.values[variable][mark_date])
 
-
     def number_date(self):
-        if self.interval[0] == 'y' or self.interval[0] == 'a':
-            self.year = Namespace()
+        setattr(self, self.interval, Namespace())
+        if self.interval == 'year':
             for variable in self.variables:
                 setattr(self.year, variable, [dt.year for dt in getattr(self.date, variable)])
-        elif self.interval[0] == 'm':
-            self.month = Namespace()
+        elif self.interval == 'month':
             for variable in self.variables:
                 setattr(self.year, variable, [dt.year + dt.month / 12.0 for dt in getattr(self.date, variable)])
         else:
-            print("Only do yearly for now.")
+            mult = {'day': 1.0, 'hour': 24.0, 'minute': 24.0*60.0}
+            for variable in self.variables:
+                setattr(getattr(self, self.interval), variable, [mult[self.interval] * (x - getattr(self.date, variable)[0]).days for x in getattr(self.date, variable)])
