@@ -120,7 +120,11 @@ class IntervalTracker:
             setattr(self.date, variable, [])
             for mark_date in sorted(self.values[variable]):
                 getattr(self.date, variable).append(mark_date)
-                getattr(self, variable).append(self.values[variable][mark_date])
+                try:
+                    val2use = float(self.values[variable][mark_date])
+                except TypeError:
+                    val2use = self.values[variable][mark_date][1]
+                getattr(self, variable).append(val2use)
 
     def number_date(self):
         """
