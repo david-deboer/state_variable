@@ -94,19 +94,19 @@ class IntervalTracker:
                 mark = datetime(year=vdate.year, month=vdate.month, day=vdate.day, hour=vdate.hour)
             elif self.interval == 'minute':
                 mark = datetime(year=vdate.year, month=vdate.month, day=vdate.day, hour=vdate.hour, minute=vdate.minute)
-            self.per_interval[variable].setdefault(mark, [])
-            self.per_interval[variable][mark].append(vdate)
             try:
                 fval = float(vval)
                 self.values[variable].setdefault(mark, 0.0)
                 self.values[variable][mark] += fval
             except ValueError:
                 if mark not in self.values[variable]:
-                    self.values[variable][mark] = (vdate, vval)
+                    self.values[variable][mark] = vval
                 else:
-                    previous_date, previous_val = self.values[variable][mark]
-                    if self.values[variable][mark][0] > previous_date:
-                        self.values[variable][mark] = (vdate, vval)
+                    previous_late = sorted(self.per_interval[variable][mark])[-1]
+                    if vdate > previous_late:
+                        self.values[variable][mark] = vval
+            self.per_interval[variable].setdefault(mark, [])
+            self.per_interval[variable][mark].append(vdate)
 
     def make(self):
         """
