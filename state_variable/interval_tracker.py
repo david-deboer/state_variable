@@ -102,7 +102,7 @@ class IntervalTracker:
                 self.values[variable][mark] += fval
             except ValueError:
                 if mark not in self.values[variable]:
-                    self.values[mark] = (vdate, vval)
+                    self.values[variable][mark] = (vdate, vval)
                 else:
                     previous_date, previous_val = self.values[variable][mark]
                     if self.values[variable][mark][0] > previous_date:
