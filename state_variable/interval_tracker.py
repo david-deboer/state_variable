@@ -122,7 +122,7 @@ class IntervalTracker:
                 getattr(self.date, variable).append(mark_date)
                 try:
                     val2use = float(self.values[variable][mark_date])
-                except TypeError:
+                except ValueError:
                     val2use = self.values[variable][mark_date][1]
                 getattr(self, variable).append(val2use)
 
