@@ -102,7 +102,7 @@ class IntervalTracker:
                 if mark not in self.values[variable]:
                     self.values[variable][mark] = vval
                 else:
-                    previous_late = sorted(self.per_interval[variable][mark])[-1]
+                    previous_late = max(self.per_interval[variable][mark])
                     if vdate > previous_late:
                         self.values[variable][mark] = vval
             self.per_interval[variable].setdefault(mark, [])
