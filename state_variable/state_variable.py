@@ -16,7 +16,7 @@ class StateVariable:
         state_name:  the name of the variable -- it becomes an attribute of the class.
         state_value:  the value of the state_name -- the value of the class attribute.
         state_type:  the data-type -- the expected data-type, which may or may not be ignored.
-        state_desctription:  a description of the state variable.
+        state_description:  a description of the state variable.
     The state_name becomes an attribute of the class itself and is referenced in that manner.  Beware you don't
     overwrite it for something else or vice versa.  The state variables and its parameters may be viewed as a set
     to help you keep track of them.  This can be used as a base class or an additional namespace for state variables.
