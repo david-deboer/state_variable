@@ -168,7 +168,7 @@ class StateVariable:
                 print(f"Modifying metastate parameters to {reset_par['new']}")
             self.metastate.mset(**reset_par['new'])
 
-        state2update = sv_util._dict_from_input_(kwargs['state'])
+        state2update = sv_util._dict_from_input_(kwargs['state'])  # Allows to read json/yaml files and keys therein
 
         # Check if state variables already exist
         eliminate_keys = []
