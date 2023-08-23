@@ -8,9 +8,9 @@ class Metastate:
         'label': {'type': (str), 'choices': None, 'default': 'StateVarDef'},
         'note': {'type': (str), 'choices': None, 'default': 'StateVariable class'},
         'state': {'type': (dict), 'choices': None, 'default': {}},
-        'verbose': {'type': (bool), 'choices': [True, False], 'default': True},
-        'enforce_set': {'type': (bool), 'choices': [True, False], 'default': True},
-        'enforce_type': {'type': (bool), 'choices': [True, False], 'default': True},
+        'verbose': {'type': (bool), 'choices': [True, False], 'default': False},
+        'enforce_set': {'type': (bool), 'choices': [True, False], 'default': False},
+        'enforce_type': {'type': (bool), 'choices': [True, False], 'default': False},
         'notify_set': {'type': (str), 'choices': ['ignore', 'alert', 'error'], 'default': 'alert'},
         'notify_type': {'type': (str), 'choices': ['ignore', 'alert', 'error'], 'default': 'alert'},
         'package': {'type': (str, dict), 'choices': None, 'default': 'default'}
@@ -176,7 +176,7 @@ class Metastate:
                     print(f"{sv_name} != {sv_val['state_name']} -> using {sv_name}")
                 update_state.update(sv_val)    
             else:
-                update_state.update({'state_value': sv_val})
+                raise ValueError("The new state_variable scheme shouldn't get here")
             update_state['state_name'] = copy(sv_name)
             update_state['state_type'] = sv_util._type_from_input_(update_state['state_type'], update_state['state_value'])
             return_state[sv_name] = deepcopy(update_state)

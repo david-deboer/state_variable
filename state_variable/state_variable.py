@@ -129,7 +129,7 @@ class StateVariable:
                 kwproc['state'].setdefault(this_state_name, {})
                 kwproc['state'][this_state_name][k] = deepcopy(v)
             else:
-                kwproc['state'][k] = deepcopy(v)
+                kwproc['state'][k] = {'state_name': k, 'state_value': deepcopy(v)}
         return kwproc
 
     def sv_set_state(self, **kwargs):
@@ -139,8 +139,8 @@ class StateVariable:
         Parameters
         ----------
         **kwargs: Change a state variable or one-time change a metastate (i.e. to initialize etc).
-                  All names will begin with either meta_ or state_, except for an actual state.
-                  A special flag called 'meta_init' is included to allow for initialization.
+                  All kwarg keys will begin with either meta_ or state_, except for an actual state.
+                  A special flag called 'meta_init' is included to allow for one-time initialization.
                   Appropriate meta_state values are e.g.:
                       'file_with_info.yaml' or 
                      {'frequency': {'state_value': 1420.0, 'state_type': 'float', 'state_description': 'Frequency in MHz'},
