@@ -4,7 +4,7 @@ from .state_variable_error import StateVariableError
 INVALID = '_x_iNvAlId_x_'
 
 def _dict_from_input_(inputv):
-    """Handle input to yield a dict."""
+    """Handle input to yield a dict -- inputv is either a dict or a filename:[key]."""
     if isinstance(inputv, dict):
         return deepcopy(inputv)
     if inputv is None:
