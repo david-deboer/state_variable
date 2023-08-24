@@ -26,7 +26,7 @@ class Metastate:
 
         Parameters
         ----------
-        **kwargs (parameters: label, note, state, verbose, enforce_set, enforce_type, notify_set, notify_type, package)
+        **kwargs (parameters: label, note, state, attr, verbose, enforce_set, enforce_type, notify_set, notify_type, package)
             package is either a dict with appropriate meta values, or a str with the filename [and :key] of appropriate meta values
             state is either a dict with appropriate state values, or a str with the filename [and :key] of appropriate state values
                 "appropriate state values" (either directly or in the supplied file) are e.g.:

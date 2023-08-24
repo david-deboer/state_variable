@@ -26,8 +26,8 @@ class StateVariable:
         note: (str) a note/description if desired
         state: (dict) the complete list of the state variables and their parameters (the name/value are duplicates of
             the generated class attributes.)
-        attr: (list) if present, contains the attributes from the parent/calling class to check
-            if not present, just includes the attributes of this class
+        attr: (list) if present, contains the attributes from the parent/calling class to check or other attr names to
+            protect, if not present, just includes the attributes of this class
         verbose: (bool) a verbosity setting for the class
         enforce_set: (bool)
             If True, a general call to set a state variable won't work unless it is already defined.  What happens
