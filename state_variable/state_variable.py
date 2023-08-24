@@ -26,6 +26,8 @@ class StateVariable:
         note: (str) a note/description if desired
         state: (dict) the complete list of the state variables and their parameters (the name/value are duplicates of
             the generated class attributes.)
+        attr: (list) if present, contains the attributes from the parent/calling class to check
+            if not present, just includes the attributes of this class
         verbose: (bool) a verbosity setting for the class
         enforce_set: (bool)
             If True, a general call to set a state variable won't work unless it is already defined.  What happens
@@ -55,11 +57,13 @@ class StateVariable:
 
     def __init__(self, **kwargs):
         """
-        Initialize state variable class with any of the meta_parameters
+        Initialize state variable class with any of the meta_parameters.
+        
+        __Can't__ directly include state variable outside state dict
 
         Parameters
         ----------
-        **kwargs (meta_parameters: label, note, state, verbose, enforce_set, enforce_type, notify_set, notify_type, package)
+        **kwargs (meta_parameters: label, note, state, attr, verbose, enforce_set, enforce_type, notify_set, notify_type, package)
             package is either a dict with appropriate meta values, or a str with the filename [and :key] of appropriate meta values
             state is either a dict with appropriate state values, or a str with the filename [and :key] of appropriate state values
                 "appropriate state values" (either directly or in the supplied file) are e.g.:
@@ -69,6 +73,10 @@ class StateVariable:
                     {'state_name': 'frequency', 'state_value': 1420.0, 'state_type': 'float', 'state_description': 'Frequency in MHz'}
 
         """
+        if 'attr' in kwargs:
+            kwargs['attr'] += dir(self)
+        else:
+            kwargs['attr'] = dir(self)
         self.meta = state_variable_meta.Metastate(**kwargs)
         for k in self.meta.state:
             setattr(self, k, self.meta.state[k]['state_value'])

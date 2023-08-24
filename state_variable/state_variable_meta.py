@@ -8,6 +8,7 @@ class Metastate:
         'label': {'type': (str), 'choices': None, 'default': 'StateVarDef'},
         'note': {'type': (str), 'choices': None, 'default': 'StateVariable class'},
         'state': {'type': (dict), 'choices': None, 'default': {}},
+        'attr': {'type': (list), 'choices': None, 'default': []},
         'verbose': {'type': (bool), 'choices': [True, False], 'default': False},
         'enforce_set': {'type': (bool), 'choices': [True, False], 'default': False},
         'enforce_type': {'type': (bool), 'choices': [True, False], 'default': False},
@@ -140,6 +141,10 @@ class Metastate:
             return this_val
         return f"{sv_util.INVALID}|{this_key}={this_val}"
 
+    def _check_existing_state(self, key):
+        if key in self.attr and key not in self.state:
+            raise ValueError(f"{key} is already a defined value.")
+
     def _poke_statevar_dict_(self, state2update):
         """
         Make complete state attribute dictionary given updates in state2update.
@@ -182,6 +187,7 @@ class Metastate:
             update_state['state_name'] = copy(sv_name)
             update_state['state_type'] = sv_util._type_from_input_(update_state['state_type'], update_state['state_value'])
             return_state[sv_name] = deepcopy(update_state)
+            self._check_existing_state(sv_name)
         return return_state
 
     def mset(self, **kwargs):
