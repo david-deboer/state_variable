@@ -283,15 +283,13 @@ class Metastate:
         print(f"{spacer[0]}-+-{spacer[1]}-+-{spacer[2]}-+-{spacer[3]}")
 
 
-    def to_dict(self, skip_state=False, update_meta=False):
+    def to_dict(self, update_meta=False):
         """
         Return the full metastate as a dictionary or old/new/flag if update_state is not None.
 
         Parameters
         ----------
-        skip_state : bool
-            Won't include the 'state' metavariable if True.
-        update_state : False or dict
+        update_state : False or dict of kwargs
             If dict, it will return an "uber" dict of 'old'/'new' differences.
 
         """
@@ -299,8 +297,6 @@ class Metastate:
         if isinstance(update_meta, dict) and not len(update_meta):
             return kwargs_par # An empty dictionary is returned as a null update_state
         for k in self.parameters:
-            if k == 'state' and skip_state:
-                continue
             current_entry = copy(getattr(self, k))
             if not update_meta:
                 kwargs_par[k] = current_entry

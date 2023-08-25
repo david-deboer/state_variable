@@ -8,8 +8,9 @@ class StateVariable:
     """
     General state variable class to keep track of groups of parameters within a class.
 
-    A summary is that this class does 2 things: (1) acts as a filter depending on the meta parameters,
-    and (2) writes the state variables as attributes to this class.  It is the public-facing Class.
+    A summary is that this class does 2 things:
+        (1) acts as a gatekeeper depending on the meta parameters, but primarily
+        (2) writes the state variables as attributes to this class.
 
     The class accepts parameters, values and othe meta data to generate state variables.  A state variable
     has the following parameters:
@@ -21,37 +22,42 @@ class StateVariable:
     overwrite it for something else or vice versa.  The state variables and its parameters may be viewed as a set
     to help you keep track of them.  This can be used as a base class or an additional namespace for state variables.
 
-    The class itself has a set of "meta" state variables (contained in the self.meta Namespace):
-        label: (str) the overall label for this set of state variables
-        note: (str) a note/description if desired
-        state: (dict) the complete list of the state variables and their parameters (the name/value are duplicates of
-            the generated class attributes.)
-        attr: (list) if present, contains the attributes from the parent/calling class to check or other attr names to
-            protect, if not present, just includes the attributes of this class
-        verbose: (bool) a verbosity setting for the class
-        enforce_set: (bool)
-            If True, a general call to set a state variable won't work unless it is already defined.  What happens
-            (other than just setting the new state variable) is set by the notify_set parameter
-        enforce_type: (bool)
-            If True, a call to set a state variable that does not conform ot the expected data-type won't work.
-            What happens (other than not setting the new state variable value) is set by the notify_type parameter
-        notify_set: (str) one of ['ignore', 'alert', 'error']
-            ignore: will be silent on the matter (so if enforce_set is True, the variable won't get set and you
-                    won't be alerted))
-            alert: if the state variable is not present, you will be told.  Note that if enforce_set is False, it
-                   will still get set to the new value.
-            error: if the state variable is not present and enforce_set is True, it will raise a StateVariableError.
-                   if enforce_set is False, this is the same thing as 'alert'
-        notify_type: (str) one of ['ignore', 'alert', 'error']
-            ignore: will be silent on the matter (so if enforce_type is True, the variable won't get set and you
-                    won't be alerted))
-            alert: if the state variable is not present, you will be told.  Note that if enforce_type is False, it
-                   will still get set to the new value.
-            error: if the state variable is not present and enforce_type is True, it will raise a StateVariableError.
-                   if enforce_type is False, this is the same thing as 'alert'
-        package: (str) this is a pseudo-meta in that it helps track groups of metas (e.g. to init, or reset etc)
-                 when used as an argument, one can pass a dictionary of values of above, a json/yaml file or one of the
-                 "named" packages defined in meta_packages (currently 'init', 'reset', 'default', 'minimal', 'middle', 'maximal')
+    Parameters
+    ----------
+    label : str
+        the overall label for this set of state variables
+    note : str 
+        a note/description if desired
+    state : dict, str 
+        state variables and their parameters (see the keys in state_variable_meta.Metastate.state_key_defaults
+    attr : list
+        protected attributes - starts with the attributes of this module (vars(self))
+    verbose : bool 
+        verbosity setting for the class
+    enforce_set : bool
+        If True, a general call to set a state variable won't work unless it is already defined.  What happens
+        (other than just setting the new state variable) is set by the notify_set parameter
+    enforce_type : bool
+        If True, a call to set a state variable that does not conform ot the expected data-type won't work.
+        What happens (other than not setting the new state variable value) is set by the notify_type parameter
+    notify_set : str, one of ['ignore', 'alert', 'error']
+        ignore: will be silent on the matter (so if enforce_set is True, the variable won't get set and you
+            won't be alerted))
+        alert: if the state variable is not present, you will be told.  Note that if enforce_set is False, it
+            will still get set to the new value.
+        error: if the state variable is not present and enforce_set is True, it will raise a StateVariableError.
+            if enforce_set is False, this is the same thing as 'alert'
+    notify_type : str one of ['ignore', 'alert', 'error']
+        ignore: will be silent on the matter (so if enforce_type is True, the variable won't get set and you
+            won't be alerted))
+        alert: if the state variable is not present, you will be told.  Note that if enforce_type is False, it
+            will still get set to the new value.
+        error: if the state variable is not present and enforce_type is True, it will raise a StateVariableError.
+            if enforce_type is False, this is the same thing as 'alert'
+    package :  str
+        this is a pseudo-meta in that it helps track groups of metas (e.g. to init, or reset etc)
+        when used as an argument, one can pass a dictionary of values of above, a json/yaml file or one of the
+        "named" packages defined in meta_packages (currently 'init', 'reset', 'default', 'minimal', 'middle', 'maximal')
 
     """
 
@@ -122,8 +128,8 @@ class StateVariable:
         elif self.meta.verbose:
             print("Not deleting state.")
 
-    def _process_sv_set_state_input_kwargs_(self, **kwargs):
-        """Takes input kwargs and makes them appropriate for meta.mset"""
+    def _process_sv_set_state_kwargs_(self, **kwargs):
+        """Takes input kwargs and packages them for meta.mset"""
         kwproc = {'state': {}}
         if 'meta_init' in kwargs and kwargs['meta_init']:
             kwproc.update(self.meta.get_package('init'))
@@ -150,7 +156,7 @@ class StateVariable:
                   All kwarg keys will begin with either meta_ or state_, except for an actual state.
                   A special flag called 'meta_init' is included to allow for one-time initialization.
                   Appropriate meta_state values are e.g.:
-                      'file_with_info.yaml' or 
+                      'file_with_info.yaml/json' or 
                      {'frequency': {'state_value': 1420.0, 'state_type': 'float', 'state_description': 'Frequency in MHz'},
                       'bandwidth': {'state_value': 1.0, 'state_type': 'float', 'state_description': 'Bandwidth in MHz'}}
                      {'frequency': 1420.0, 'bandwidth': 1.0}
@@ -158,19 +164,19 @@ class StateVariable:
                      state_name='frequency', state_value=1420.0, state_type='float', state_description='Frequency in MHz'
                   or
                      frequency=1420, bandwidth=1.0
-                  You should only use 1 method of the 3
+            Generally, you'll use the last...
 
         """
         if not len(kwargs):
             self.meta.mlist(show_full=False)  # Just show values and return
             return
-        kwargs = self._process_sv_set_state_input_kwargs_(**kwargs)
+        kwargs = self._process_sv_set_state_kwargs_(**kwargs)
         if 'state' not in kwargs or not len(kwargs['state']):
             if self.meta.verbose:
                 print("Nothing to update.")
             return
         # Change meta for this time if present.
-        reset_par = self.meta.to_dict(skip_state=True, update_meta=kwargs)
+        reset_par = self.meta.to_dict(update_meta=kwargs)
         if reset_par:
             if self.meta.verbose:
                 print(f"Modifying meta parameters to {reset_par['new']}")
