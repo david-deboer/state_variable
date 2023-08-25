@@ -1,5 +1,6 @@
 """General simple state variable module."""
 from copy import copy, deepcopy
+from tabulate import tabulate
 from . import sv_util
 
 
@@ -198,8 +199,8 @@ class Metastate:
 
         Parameters
         ----------
-        **kwargs (parameters: label, note, state, verbose, enforce_set, enforce_type, notify_set, notify_type, package)
-            appropriate state values are e.g.:
+        **kwargs - see Metastate.parameters
+            appropriate values for the 'state' parameter are e.g.:
                 'file_with_info.yaml' or 
                {'frequency': {'state_value': 1420.0, 'state_type': 'float', 'state_description': 'Frequency in MHz'},
                 'bandwidth': {'state_value': 1.0, 'state_type': 'float', 'state_description': 'Bandwidth in MHz'}}
@@ -260,28 +261,19 @@ class Metastate:
                 if k != 'state':
                     print("\t{:12s}   {}".format(k, getattr(self, k)))
         print("State variables:")
-        table = []
-        maxlen = {'state_name': 4, 'state_value': 5, 'state_type': 4, 'state_description': 11}
-        hdr = ['Name', 'Value', 'Type', 'Description']
-        _tr = int(max_entry_len / 2 - 2)
+        table_data = []
+        keys = ['state_name', 'state_value', 'state_type', 'state_description']
+        hdr = [_x.split('_')[1].capitalize() for _x in keys]
+        _l = int(max_entry_len / 2 - 2)
         for k in self.state:
-            row = []
-            for sk in ['state_name', 'state_value', 'state_type', 'state_description']:
+            table_row = []
+            for sk in keys:
                 value = str(self.state[k][sk])
                 if len(value) > max_entry_len:
-                    value = '{}....{}'.format(value[:_tr], value[-_tr:])
-                row.append(value)
-                if len(value) > maxlen[sk]:
-                    maxlen[sk] = len(value)
-            table.append(row)
-        spacer = ['-'*maxlen['state_name'], '-'*maxlen['state_value'], '-'*maxlen['state_type'], '-'*maxlen['state_description']] 
-        print()
-        print(f"{hdr[0]:{maxlen['state_name']}s} | {hdr[1]:{maxlen['state_value']}s} | {hdr[2]:{maxlen['state_type']}s} | {hdr[3]:{maxlen['state_description']}s}")
-        print(f"{spacer[0]}-+-{spacer[1]}-+-{spacer[2]}-+-{spacer[3]}")
-        for row in table:
-            print(f"{row[0]:{maxlen['state_name']}s} | {row[1]:{maxlen['state_value']}s} | {row[2]:{maxlen['state_type']}s} | {row[3]:{maxlen['state_description']}s}")
-        print(f"{spacer[0]}-+-{spacer[1]}-+-{spacer[2]}-+-{spacer[3]}")
-
+                    value = '{}....{}'.format(value[:_l], value[-_l:])
+                table_row.append(value)
+            table_data.append(table_row)
+        print(tabulate(table_data, headers=hdr), '\n')
 
     def to_dict(self, update_meta=False):
         """
