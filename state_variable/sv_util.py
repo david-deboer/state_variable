@@ -1,14 +1,20 @@
-from copy import copy, deepcopy
+from copy import copy
 from .state_variable_error import StateVariableError
 
 INVALID = '_x_iNvAlId_x_'
 
-def _dict_from_input_(inputv):
+def _dict_from_input_(inputv, list_key='state_name'):
     """Handle input to yield a dict -- inputv is either a dict or a filename:[key]."""
     if isinstance(inputv, dict):
-        return deepcopy(inputv)
+        return inputv
     if inputv is None:
         return {}
+    if isinstance(inputv, list):
+        return_dict = {}
+        for entry in inputv:
+            return_dict[entry[list_key]] = entry
+        return return_dict
+    # Assume is string containing input filename
     ivsplit = inputv.split(':')
     filename = ivsplit[0]
     if filename.lower().endswith('.json'):
