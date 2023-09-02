@@ -17,7 +17,7 @@ class Metastate:
         'notify_set': {'type': (str), 'choices': ['ignore', 'alert', 'error'], 'default': 'ignore'},
         'notify_type': {'type': (str), 'choices': ['ignore', 'alert', 'error'], 'default': 'ignore'},
         'package': {'type': (str, dict), 'choices': None, 'default': 'default'},
-        'override': {'type': (bool, str, dict), 'choices': None, 'default': False}
+        'override': {'type': (bool), 'choices': None, 'default': False}
         }
     state_key_defaults = {'state_name': None, 'state_value': None, 'state_type': 'auto', 'state_description': None}
 
@@ -50,7 +50,7 @@ class Metastate:
         Parameters _into_ state_variable use the meta_ prefix
         Parameters _into_ state_variable_meta don't
 
-        I'm hoping to make this easier by doing this, but we'll see.
+        I'm hoping to make this easier/better by doing this, but we'll see.
         """
         metalize = {}
         for key, val in kwargs.items():
@@ -197,6 +197,12 @@ class Metastate:
                 print(self._svm_alert_(f"{preamble} {msg}"))
             elif self.notify_set == 'error':
                 raise StateVariableError(self._svm_alert_(msg))
+        
+        if self.override and not entry_complies:
+            entry_complies = True
+            if self.verbose:
+                print(f"Override for {update_state['state_name']}")
+
         return entry_complies
 
     def _update_meta_state_parameter(self, meta_state):
@@ -261,22 +267,11 @@ class Metastate:
         setargs.update(kwargs)  #T This is the new version of kwargs with package info
 
         # Process verbose
-        if 'verbose' in setargs:  # Do 1st since used below.
+        if 'verbose' in setargs:  # Used for below
             self.verbose = self._process_meta_key_val_('verbose', setargs['verbose'])
 
-        print("SVM279 MAKE RESET WORK WITH OVERRIDE META_ ETC")
-        # reset_par = self.meta.to_dict(update_meta=kwargs)
-        # if reset_par:
-        #     if self.meta.verbose:
-        #         print(f"Modifying meta parameters to {reset_par['new']}")
-        #     self.meta.mset(**reset_par['new'])
-        # # Process override
-        # if 'override' in setargs:
-        #     print("set override")
-        reset_par = False
-
         # Process other meta parameters than
-        skip_these = ['package', 'verbose', 'override', 'state']
+        skip_these = ['package', 'verbose', 'state']
         for this_key, this_val in setargs.items():
             if this_key in skip_these:
                 continue
@@ -291,11 +286,7 @@ class Metastate:
         if 'state' in setargs:
             self._update_meta_state_parameter(setargs['state'])
 
-        # Reset override if needed.
-        if reset_par:
-            if self.meta.verbose:
-                print(f"Resetting meta parameters to {reset_par['old']}")
-            self.meta.mset(**reset_par['old'])  # don't like this recursive...just use setattr()
+        self.override = False  # Whether or not it was set, it is one-time
 
     def reset_state_key(self):
         """Since dicts get updated, not overwritten, this allows a reset."""

@@ -60,9 +60,8 @@ class StateVariable:
         this is a pseudo-meta in that it helps track groups of metas (e.g. to init, or reset etc)
         when used as an argument, one can pass a dictionary of values of above, a json/yaml file or one of the
         "named" packages defined in meta_packages (currently 'init', 'reset', 'default', 'minimal', 'middle', 'maximal')
-    meta_override : bool, str, dict
-        this is a pseudo-meta that does a one-time override of meta parameters and then resets to previous.
-        If bool, uses package 'init', if str uses that package, if dict uses those parameters
+    meta_override : bool
+        this is a pseudo-meta that does a one-time override of meta parameters. It allows any change that time.
         
     """
 
