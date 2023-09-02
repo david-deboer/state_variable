@@ -131,7 +131,7 @@ class Metastate:
             return {}
         return deepcopy(this_package)
 
-    def _process_meta_key_val_(self, this_key, this_val):
+    def _process_meta_kwargs_(self, this_key, this_val):
         """
         Get a valid metastate value for a single metastate 'this_key'.
 
@@ -167,7 +167,7 @@ class Metastate:
             return this_val
         return f"{sv_util.INVALID}|{this_key}={this_val}"
 
-    def _complies(self, update_state):
+    def _state_complies(self, update_state):
         """
         # Check if state variable types are compliant
         # 'enforce_set': {'type': (bool), 'choices': [True, False], 'default': False},
@@ -232,14 +232,14 @@ class Metastate:
                 update_state.update({'state_name': sv_name, 'state_value': sv_val})
             if update_state['state_type'] == 'auto':
                 update_state['state_type'] = type(update_state['state_value'])
-            if self._complies(update_state):
+            if self._state_complies(update_state):
                 self.state[update_state['state_name']] = deepcopy(update_state)
     
     def mset(self, **kwargs):
         """
         Check and set the internal state.
 
-        This is the workhorse method that sets the metastate parameters, where the work is done in _process_meta_key_val_
+        This is the workhorse method that sets the metastate parameters, where the work is done in _process_meta_kwargs_
 
         Parameters
         ----------
@@ -268,14 +268,14 @@ class Metastate:
 
         # Process verbose
         if 'verbose' in setargs:  # Used for below
-            self.verbose = self._process_meta_key_val_('verbose', setargs['verbose'])
+            self.verbose = self._process_meta_kwargs_('verbose', setargs['verbose'])
 
         # Process other meta parameters than
         skip_these = ['package', 'verbose', 'state']
         for this_key, this_val in setargs.items():
             if this_key in skip_these:
                 continue
-            value = self._process_meta_key_val_(this_key, this_val)
+            value = self._process_meta_kwargs_(this_key, this_val)
             if isinstance(value, str) and value.startswith(sv_util.INVALID):
                 if self.verbose:
                     print(self._svm_alert_(f"{value.split('|')[1]} not allowed metastate option"))
@@ -342,7 +342,7 @@ class Metastate:
             if not update_meta:
                 kwargs_par[k] = current_entry
             elif k in update_meta:
-                new_entry = self._process_meta_key_val_(k, update_meta[k])
+                new_entry = self._process_meta_kwargs_(k, update_meta[k])
                 if new_entry != sv_util.INVALID and new_entry != current_entry:
                     kwargs_par.setdefault('old', {})
                     kwargs_par.setdefault('new', {})
